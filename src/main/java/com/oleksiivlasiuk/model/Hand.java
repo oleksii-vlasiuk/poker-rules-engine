@@ -1,5 +1,6 @@
 package com.oleksiivlasiuk.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -22,6 +23,18 @@ public class Hand {
 
     public Card getHighestCard() {
         return Collections.max(cards, Comparator.comparingInt(Card::getCardRankValue));
+    }
+
+    public Hand getSortedCopy() {
+        List<Card> handCards = new ArrayList<>(cards);
+        handCards.sort(Comparator.comparingInt(Card::getCardRankValue));
+        return new Hand(handCards);
+    }
+
+    public Hand getSortedCopyDesc() {
+        List<Card> handCards = new ArrayList<>(cards);
+        handCards.sort(Comparator.comparingInt(Card::getCardRankValue).reversed());
+        return new Hand(handCards);
     }
 
     @Override

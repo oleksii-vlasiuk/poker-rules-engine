@@ -3,41 +3,33 @@ package com.oleksiivlasiuk.service;
 import com.oleksiivlasiuk.model.Card;
 import com.oleksiivlasiuk.model.Hand;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
 public class HandEvaluator {
     public int evaluateCombinationStrength(Hand hand) {
-        List<Card> handCards = new ArrayList<>(hand.getCards());
-        handCards.sort(Comparator.comparingInt(Card::getCardRankValue));
-        Hand sortedCardsHand = new Hand(handCards);
-
-        if (isRoyalFlush(sortedCardsHand)) {
+        if (isRoyalFlush(hand)) {
             return 10;
         }
-        if (isStraightFlush(sortedCardsHand)) {
+        if (isStraightFlush(hand)) {
             return 9;
         }
-        if (isFourOfAKind(sortedCardsHand)) {
+        if (isFourOfAKind(hand)) {
             return 8;
         }
-        if (isFullHouse(sortedCardsHand)) {
+        if (isFullHouse(hand)) {
             return 7;
         }
-        if (isFlush(sortedCardsHand)) {
+        if (isFlush(hand)) {
             return 6;
         }
-        if (isStraight(sortedCardsHand)) {
+        if (isStraight(hand)) {
             return 5;
         }
-        if (isThreeOfAKind(sortedCardsHand)) {
+        if (isThreeOfAKind(hand)) {
             return 4;
         }
-        if (isTwoPair(sortedCardsHand)) {
+        if (isTwoPair(hand)) {
             return 3;
         }
-        if (isOnePair(sortedCardsHand)) {
+        if (isOnePair(hand)) {
             return 2;
         }
         return 1;
@@ -72,9 +64,8 @@ public class HandEvaluator {
     }
 
     private boolean isStraight(Hand hand) {
-        Hand reversedHand = new Hand(hand.getCards().reversed());
         for (int i = 0; i < 4; i++) {
-            if (Card.getCardRankValue(reversedHand.getCardByIndex(i)) - Card.getCardRankValue(reversedHand.getCardByIndex(i + 1)) != 1) {
+            if (Card.getCardRankValue(hand.getCardByIndex(i)) - Card.getCardRankValue(hand.getCardByIndex(i + 1)) != 1) {
                 return false;
             }
         }
