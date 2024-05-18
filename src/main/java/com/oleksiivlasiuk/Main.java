@@ -10,7 +10,7 @@ import java.io.IOException;
 public class Main {
 
     private static final String INVALID_SOURCE_FILE = "Source file cannot be read. Check file availability.";
-    private static final String MISSING_ARGUMENT = "Missing command line argument. Please provide a path to a source file and restart.";
+    private static final String MISSING_ARGUMENT = "Missing command line argument. Please provide a path to a source file.";
 
 
     public static void main(String[] args) {

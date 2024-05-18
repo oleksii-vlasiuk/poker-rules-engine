@@ -15,10 +15,8 @@ import java.util.List;
 public class PokerHandReader {
 
     public List<Hand> readHandsFromFile(String path) throws IOException, InvalidPokerHandException {
-        SourceFileValidator sourceFileValidator = new SourceFileValidator();
-
         List<String> lines = Files.readAllLines(Paths.get(path), StandardCharsets.UTF_8);
-        sourceFileValidator.validateSourceFile(lines);
+        SourceFileValidator.validateSourceFile(lines);
 
         List<Hand> hands = new ArrayList<>();
         for (String line : lines) {
