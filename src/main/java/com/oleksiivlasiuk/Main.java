@@ -6,17 +6,21 @@ import com.oleksiivlasiuk.service.PokerHandRanker;
 import com.oleksiivlasiuk.service.PokerHandReader;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
 
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
     private static final String INVALID_SOURCE_FILE = "Source file cannot be read. Check file availability.";
     private static final String MISSING_ARGUMENT = "Missing command line argument. Please provide a path to a source file.";
+    private static final String UNEXPECTED_ERROR = "An unexpected error occurred: ";
 
 
     public static void main(String[] args) {
 
         if (args.length == 0) {
-            System.out.println(MISSING_ARGUMENT);
+            LOGGER.log(Level.SEVERE, MISSING_ARGUMENT);
             return;
         }
 
@@ -32,14 +36,11 @@ public class Main {
                         pokerHandReader.readHandsFromFile(sourceFilePath)));
 
         } catch (IOException e) {
-            System.err.println(INVALID_SOURCE_FILE);
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, INVALID_SOURCE_FILE);
         } catch (InvalidPokerHandException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage());
         } catch (Exception e) {
-            System.err.println("An unexpected error occurred: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, UNEXPECTED_ERROR, e.getMessage());
         }
     }
 }

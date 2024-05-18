@@ -20,22 +20,22 @@ public class PokerHandReader {
 
         List<Hand> hands = new ArrayList<>();
         for (String line : lines) {
-            hands.add(parseHand(line));
+            hands.add(parseHandFromString(line));
         }
         return hands;
     }
 
-    public Card parseCard(String card) {
+    public Card parseCardFromString(String card) {
         String rank = card.substring(0, card.length() - 1);
         String suit = card.substring(card.length() - 1);
         return new Card(rank, suit);
     }
 
-    public Hand parseHand(String hand) {
+    public Hand parseHandFromString(String hand) {
         List<String> cardsNames = List.of(hand.split(" "));
         List<Card> cards = new ArrayList<>();
         for (String cardName : cardsNames) {
-            cards.add(parseCard(cardName));
+            cards.add(parseCardFromString(cardName));
         }
         return new Hand(cards);
     }
