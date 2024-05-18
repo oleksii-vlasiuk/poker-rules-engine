@@ -13,7 +13,7 @@ public class SourceFileValidator {
     private static final String EMPTY_FILE_ERROR = "File is empty.";
     private static final String INVALID_FORMAT_ERROR = "File doesn't match the requirements.";
 
-    public void validateSourceFile(List<String> lines) throws InvalidPokerHandException {
+    public static void validateSourceFile(List<String> lines) throws InvalidPokerHandException {
         if (lines == null || lines.isEmpty()) {
             throw new InvalidPokerHandException(EMPTY_FILE_ERROR);
         }
