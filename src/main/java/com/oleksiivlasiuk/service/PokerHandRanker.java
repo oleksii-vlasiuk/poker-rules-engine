@@ -1,6 +1,7 @@
 package com.oleksiivlasiuk.service;
 
 import com.oleksiivlasiuk.model.Hand;
+import com.oleksiivlasiuk.model.HandEvaluationResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +25,7 @@ public class PokerHandRanker {
         List<HandEvaluationResult> handEvaluationResults = new ArrayList<>();
 
         for (Hand hand : hands) {
-            futures.add(executor.submit(() -> {
-                int strength = handEvaluator.evaluateCombinationStrength(hand);
-                return new HandEvaluationResult(hand, strength);
-            }));
+            futures.add(executor.submit(() -> handEvaluator.evaluateHandStrength(hand)));
         }
 
         for (Future<HandEvaluationResult> future : futures) {
@@ -35,10 +33,10 @@ public class PokerHandRanker {
         }
 
         handEvaluationResults.sort((result1, result2) -> {
-            if (result1.strength() != result2.strength()) {
-                return Integer.compare(result1.strength(), result2.strength());
+            if (result1.combinationStrength() != result2.combinationStrength()) {
+                return Integer.compare(result1.combinationStrength(), result2.combinationStrength());
             } else {
-                return handEvaluator.compareHandsOfSameType(result1.hand(), result2.hand(), result1.strength());
+                return Integer.compare(result1.encoding(), result2.encoding());
             }
         });
 
@@ -50,6 +48,4 @@ public class PokerHandRanker {
         executor.shutdown();
         return sortedHands.reversed();
     }
-
-    private record HandEvaluationResult(Hand hand, int strength) {}
 }
