@@ -53,18 +53,26 @@ public class HandEvaluator {
     }
 
     private int encodeFourOfAKind(Hand hand) {
-        String fourOfAKindHexStringValue = findFourOfAKindHexStringValue(hand);
-        String kicker;
-        if (!Card.getCardRankHexStringValue(hand.getCardByIndex(0)).equals(fourOfAKindHexStringValue)) {
-            kicker = Card.getCardRankHexStringValue(hand.getCardByIndex(0));
-        } else kicker = Card.getCardRankHexStringValue(hand.getCardByIndex(4));
-        return Integer.parseInt(fourOfAKindHexStringValue + kicker, 16);
+        int fourOfAKindValue = findFourOfAKindValue(hand);
+        int kicker;
+        if (hand.getCardByIndex(0).getRank() != fourOfAKindValue) {
+            kicker = hand.getCardByIndex(0).getRank();
+        } else {
+            kicker = hand.getCardByIndex(4).getRank();
+        }
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(fourOfAKindValue));
+        hexCode.append(Integer.toHexString(kicker));
+        return Integer.parseInt(hexCode.toString(), 16);
     }
 
     private int encodeFullHouse(Hand hand) {
-        String threeOfAKindHexStringValue = findThreeOfAKindHexStringValue(hand);
-        String pairHexValue = findPairHexStringValueForFullHouse(hand, threeOfAKindHexStringValue);
-        return Integer.parseInt(threeOfAKindHexStringValue + pairHexValue, 16);
+        int threeOfAKindValue = findThreeOfAKindValue(hand);
+        int pairValue = findPairValueForFullHouse(hand, threeOfAKindValue);
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(threeOfAKindValue));
+        hexCode.append(Integer.toHexString(pairValue));
+        return Integer.parseInt(hexCode.toString(), 16);
     }
 
     private int encodeStraight(Hand hand) {
@@ -72,53 +80,67 @@ public class HandEvaluator {
     }
 
     private int encodeThreeOfAKind(Hand hand) {
-        String threeOfAKindHexStringValue = findThreeOfAKindHexStringValue(hand);
-        String[] parts = new String[2];
+        int threeOfAKindValue = findThreeOfAKindValue(hand);
+        int[] parts = new int[2];
         for (int i = 0, j = 0; i < 5; i++) {
-            String currentCardRankHexStringValue = Card.getCardRankHexStringValue(hand.getCardByIndex(i));
-            if (!currentCardRankHexStringValue.equals(threeOfAKindHexStringValue)) {
-                parts[j++] = currentCardRankHexStringValue;
+            int currentCardRankValue = hand.getCardByIndex(i).getRank();
+            if (currentCardRankValue != threeOfAKindValue) {
+                parts[j++] = currentCardRankValue;
             }
         }
-        return Integer.parseInt(threeOfAKindHexStringValue + parts[0] + parts[1], 16);
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(threeOfAKindValue));
+        hexCode.append(Integer.toHexString(parts[0]));
+        hexCode.append(Integer.toHexString(parts[1]));
+        return Integer.parseInt(hexCode.toString(), 16);
     }
 
     private int encodeTwoPair(Hand hand) {
-        List<String> pairHexStringValues = findTwoPairHexStringValues(hand);
+        List<Integer> pairHexStringValues = findTwoPairValues(hand);
         for (int i = 0; i < 5; i++) {
-            String currentCardRankHexStringValue = Card.getCardRankHexStringValue(hand.getCardByIndex(i));
-            if (!pairHexStringValues.contains(currentCardRankHexStringValue)) {
-                return Integer.parseInt(pairHexStringValues.get(0) + pairHexStringValues.get(1) + currentCardRankHexStringValue, 16);
+            int currentCardRankValue = hand.getCardByIndex(i).getRank();
+            if (!pairHexStringValues.contains(currentCardRankValue)) {
+                StringBuffer hexCode = new StringBuffer();
+                hexCode.append(Integer.toHexString(pairHexStringValues.get(0)));
+                hexCode.append(Integer.toHexString(pairHexStringValues.get(1)));
+                hexCode.append(Integer.toHexString(currentCardRankValue));
+                return Integer.parseInt(hexCode.toString(), 16);
             }
         }
-        return 0;
+        return 0x0;
     }
 
     private int encodePair(Hand hand) {
-        String pairHexValue = findPairHexStringValue(hand);
+        String pairHexValue = Integer.toHexString(findPairValue(hand));
         String[] parts = new String[3];
         for (int i = 0, j = 0; i < 5; i++) {
-            String currentCardRankHexStringValue = Card.getCardRankHexStringValue(hand.getCardByIndex(i));
-            if (!currentCardRankHexStringValue.equals(pairHexValue)) {
-                parts[j] = currentCardRankHexStringValue;
+            int currentCardRankValue = hand.getCardByIndex(i).getRank();
+            int pairValue = findPairValue(hand);
+            if (currentCardRankValue != pairValue) {
+                parts[j] = Integer.toHexString(currentCardRankValue);
                 j++;
             }
         }
-        return Integer.parseInt(pairHexValue + parts[0] + parts[1] + parts[2], 16);
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(pairHexValue);
+        hexCode.append(parts[0]);
+        hexCode.append(parts[1]);
+        hexCode.append(parts[2]);
+        return Integer.parseInt(hexCode.toString(), 16);
     }
 
     private int encodeFlashOrHighCard(Hand hand) {
-        String hexCodeStr;
-        hexCodeStr = Card.getCardRankHexStringValue(hand.getCardByIndex(0)) +
-                Card.getCardRankHexStringValue(hand.getCardByIndex(1)) +
-                Card.getCardRankHexStringValue(hand.getCardByIndex(2)) +
-                Card.getCardRankHexStringValue(hand.getCardByIndex(3)) +
-                Card.getCardRankHexStringValue(hand.getCardByIndex(4));
-        return Integer.parseInt(hexCodeStr, 16);
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(0).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(1).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(2).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(3).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(4).getRank()));
+        return Integer.parseInt(hexCode.toString(), 16);
     }
 
-    private boolean isRoyalFlush(Hand hand) {
-        return isFlush(hand) && hand.getHighestCard().getRank().equals("A");
+    private boolean isRoyalFlush(Hand hand) {;
+        return isFlush(hand) && hand.getHighestCard().getRank() == 0xE;
     }
 
     private boolean isStraightFlush(Hand hand) {
@@ -126,19 +148,19 @@ public class HandEvaluator {
     }
 
     private boolean isFourOfAKind(Hand hand) {
-        return hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(3).getRank()) ||
-                hand.getCardByIndex(1).getRank().equals(hand.getCardByIndex(4).getRank()) ;
+        return hand.getCardByIndex(0).getRank() == hand.getCardByIndex(3).getRank() ||
+                hand.getCardByIndex(1).getRank() == hand.getCardByIndex(4).getRank() ;
     }
 
     private boolean isFullHouse(Hand hand) {
-        return  (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) && hand.getCardByIndex(2).getRank().equals(hand.getCardByIndex(4).getRank())) ||
-                (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(2).getRank()) && hand.getCardByIndex(3).getRank().equals(hand.getCardByIndex(4).getRank()));
+        return  (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() && hand.getCardByIndex(2).getRank() == hand.getCardByIndex(4).getRank()) ||
+                (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(2).getRank() && hand.getCardByIndex(3).getRank() == hand.getCardByIndex(4).getRank());
     }
 
     private boolean isFlush(Hand hand) {
-        String suit = hand.getCardByIndex(0).getSuit();
+        int suit = hand.getCardByIndex(0).getSuit();
         for (Card card : hand.getCards()) {
-            if (!card.getSuit().equals(suit)) {
+            if (card.getSuit() != suit) {
                 return false;
             }
         }
@@ -147,7 +169,7 @@ public class HandEvaluator {
 
     private boolean isStraight(Hand hand) {
         for (int i = 0; i < 4; i++) {
-            if (Card.getCardRankValue(hand.getCardByIndex(i)) - Card.getCardRankValue(hand.getCardByIndex(i + 1)) != 1) {
+            if (hand.getCardByIndex(i).getRank() - hand.getCardByIndex(i + 1).getRank() != 1) {
                 return false;
             }
         }
@@ -155,65 +177,65 @@ public class HandEvaluator {
     }
 
     private boolean isThreeOfAKind(Hand hand) {
-        return  hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(2).getRank()) ||
-                hand.getCardByIndex(1).getRank().equals(hand.getCardByIndex(3).getRank()) ||
-                hand.getCardByIndex(2).getRank().equals(hand.getCardByIndex(4).getRank());
+        return  hand.getCardByIndex(0).getRank() == hand.getCardByIndex(2).getRank() ||
+                hand.getCardByIndex(1).getRank() == hand.getCardByIndex(3).getRank() ||
+                hand.getCardByIndex(2).getRank() == hand.getCardByIndex(4).getRank();
     }
 
     private boolean isTwoPair(Hand hand) {
-        return  (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) && hand.getCardByIndex(2).getRank().equals(hand.getCardByIndex(3).getRank())) ||
-                (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) && hand.getCardByIndex(3).getRank().equals(hand.getCardByIndex(4).getRank())) ||
-                (hand.getCardByIndex(1).getRank().equals(hand.getCardByIndex(2).getRank()) && hand.getCardByIndex(3).getRank().equals(hand.getCardByIndex(4).getRank()));
+        return  (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() && hand.getCardByIndex(2).getRank() == hand.getCardByIndex(3).getRank()) ||
+                (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() && hand.getCardByIndex(3).getRank() == hand.getCardByIndex(4).getRank()) ||
+                (hand.getCardByIndex(1).getRank() == hand.getCardByIndex(2).getRank() && hand.getCardByIndex(3).getRank() == hand.getCardByIndex(4).getRank());
     }
 
     private boolean isPair(Hand hand) {
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank())) {
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank()) {
                 return true;
             }
         }
         return false;
     }
 
-    private String findFourOfAKindHexStringValue(Hand hand) {
-        return hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) ?
-                Card.getCardRankHexStringValue(hand.getCardByIndex(0)) :
-                Card.getCardRankHexStringValue(hand.getCardByIndex(2));
+    private int findFourOfAKindValue(Hand hand) {
+        return hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() ?
+                hand.getCardByIndex(0).getRank() :
+                hand.getCardByIndex(2).getRank();
     }
 
-    public String findThreeOfAKindHexStringValue(Hand hand) {
+    public int findThreeOfAKindValue(Hand hand) {
         for (int i = 0; i < 3; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 2).getRank())) {
-                return Card.getCardRankHexStringValue(hand.getCardByIndex(i));
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 2).getRank()) {
+                return hand.getCardByIndex(i).getRank();
             }
         }
-        return "0x0";
+        return 0x0;
     }
 
-    private String findPairHexStringValue(Hand hand) {
+    private int findPairValue(Hand hand) {
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank())) {
-                return Card.getCardRankHexStringValue(hand.getCardByIndex(i));
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank()) {
+                return hand.getCardByIndex(i).getRank();
             }
         }
-        return "0x0";
+        return 0x0;
     }
 
-    private String findPairHexStringValueForFullHouse(Hand hand, String threeOfAKindValue) {
+    private int findPairValueForFullHouse(Hand hand, int threeOfAKindValue) {
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank()) &&
-                    !Card.getCardRankHexStringValue(hand.getCardByIndex(i)).equals(threeOfAKindValue)) {
-                return Card.getCardRankHexStringValue(hand.getCardByIndex(i));
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank() &&
+                    hand.getCardByIndex(i).getRank() != threeOfAKindValue) {
+                return hand.getCardByIndex(i).getRank();
             }
         }
-        return "0x0";
+        return 0x0;
     }
 
-    private List<String> findTwoPairHexStringValues(Hand hand) {
-        List<String> twoPairValues = new ArrayList<>();
+    private List<Integer> findTwoPairValues(Hand hand) {
+        List<Integer> twoPairValues = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank())) {
-                twoPairValues.add(Card.getCardRankHexStringValue(hand.getCardByIndex(i)));
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank()) {
+                twoPairValues.add(hand.getCardByIndex(i).getRank());
                 i++;
             }
         }
