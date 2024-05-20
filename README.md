@@ -30,3 +30,5 @@ A♥ A♦ K♣ 4♠ 7♥\
 A♦ K♦ Q♦ J♦ 10♦
 
 **Example of usage:**
+
+![usage_scrn](https://github.com/oleksii-vlasiuk/poker-rules-engine/assets/29385959/bfaaf6aa-e5b8-4b04-b79b-e549b7540d60)
