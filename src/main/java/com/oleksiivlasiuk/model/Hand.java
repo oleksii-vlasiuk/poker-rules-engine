@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class Hand {
-    private List<Card> cards;
+    private final List<Card> cards;
 
     public Hand(List<Card> cards) {
         this.cards = cards;
@@ -16,24 +16,17 @@ public class Hand {
         return cards;
     }
 
-
     public Card getCardByIndex(int index) {
         return cards.get(index);
     }
 
     public Card getHighestCard() {
-        return Collections.max(cards, Comparator.comparingInt(Card::getCardRankValue));
-    }
-
-    public Hand getSortedCopy() {
-        List<Card> handCards = new ArrayList<>(cards);
-        handCards.sort(Comparator.comparingInt(Card::getCardRankValue));
-        return new Hand(handCards);
+        return Collections.max(cards, Comparator.comparingInt(Card::getRank));
     }
 
     public Hand getSortedCopyDesc() {
         List<Card> handCards = new ArrayList<>(cards);
-        handCards.sort(Comparator.comparingInt(Card::getCardRankValue).reversed());
+        handCards.sort(Comparator.comparingInt(Card::getRank).reversed());
         return new Hand(handCards);
     }
 

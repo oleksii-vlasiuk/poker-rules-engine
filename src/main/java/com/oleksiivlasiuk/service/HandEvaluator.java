@@ -2,62 +2,145 @@ package com.oleksiivlasiuk.service;
 
 import com.oleksiivlasiuk.model.Card;
 import com.oleksiivlasiuk.model.Hand;
+import com.oleksiivlasiuk.model.HandEvaluationResult;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class HandEvaluator {
-    public int evaluateCombinationStrength(Hand hand) {
+
+    public HandEvaluationResult evaluateHandStrength(Hand hand) {
+        int combinationStrength;
         Hand sortedCardsHand = hand.getSortedCopyDesc();
 
         if (isRoyalFlush(sortedCardsHand)) {
-            return 10;
+            combinationStrength = 10;
+            return new HandEvaluationResult(hand, combinationStrength, encodeFlashOrHighCard(sortedCardsHand));
         }
         if (isStraightFlush(sortedCardsHand)) {
-            return 9;
+            combinationStrength = 9;
+            return new HandEvaluationResult(hand, combinationStrength, encodeStraight(sortedCardsHand));
         }
         if (isFourOfAKind(sortedCardsHand)) {
-            return 8;
+            combinationStrength = 8;
+            return new HandEvaluationResult(hand, combinationStrength, encodeFourOfAKind(sortedCardsHand));
         }
         if (isFullHouse(sortedCardsHand)) {
-            return 7;
+            combinationStrength = 7;
+            return new HandEvaluationResult(hand, combinationStrength, encodeFullHouse(sortedCardsHand));
         }
         if (isFlush(sortedCardsHand)) {
-            return 6;
+            combinationStrength = 6;
+            return new HandEvaluationResult(hand, combinationStrength, encodeFlashOrHighCard(sortedCardsHand));
         }
         if (isStraight(sortedCardsHand)) {
-            return 5;
+            combinationStrength = 5;
+            return new HandEvaluationResult(hand, combinationStrength, encodeStraight(sortedCardsHand));
         }
         if (isThreeOfAKind(sortedCardsHand)) {
-            return 4;
+            combinationStrength = 4;
+            return new HandEvaluationResult(hand, combinationStrength, encodeThreeOfAKind(sortedCardsHand));
         }
         if (isTwoPair(sortedCardsHand)) {
-            return 3;
+            combinationStrength = 3;
+            return new HandEvaluationResult(hand, combinationStrength, encodeTwoPair(sortedCardsHand));
         }
-        if (isOnePair(sortedCardsHand)) {
-            return 2;
+        if (isPair(sortedCardsHand)) {
+            combinationStrength = 2;
+            return new HandEvaluationResult(hand, combinationStrength, encodePair(sortedCardsHand));
         }
-        return 1;
+        return new HandEvaluationResult(hand, 1, encodeFlashOrHighCard(sortedCardsHand));
     }
 
-    public int compareHandsOfSameType(Hand hand1, Hand hand2, int combinationStrength) {
-        Hand sortedCardsHand1 = hand1.getSortedCopyDesc();
-        Hand sortedCardsHand2 = hand2.getSortedCopyDesc();
-
-        return switch (combinationStrength) {
-            case 2 -> comparePair(sortedCardsHand1, sortedCardsHand2);
-            case 3 -> compareTwoPair(sortedCardsHand1, sortedCardsHand2);
-            case 4 -> compareThreeOfAKind(sortedCardsHand1, sortedCardsHand2);
-            case 7 -> compareFullHouse(sortedCardsHand1, sortedCardsHand2);
-            case 8 -> compareFourOfAKind(sortedCardsHand1, sortedCardsHand2);
-            case 10 -> 0;
-            default -> compareHighCards(sortedCardsHand1, sortedCardsHand2);
-        };
+    private int encodeFourOfAKind(Hand hand) {
+        int fourOfAKindValue = findFourOfAKindValue(hand);
+        int kicker;
+        if (hand.getCardByIndex(0).getRank() != fourOfAKindValue) {
+            kicker = hand.getCardByIndex(0).getRank();
+        } else {
+            kicker = hand.getCardByIndex(4).getRank();
+        }
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(fourOfAKindValue));
+        hexCode.append(Integer.toHexString(kicker));
+        return Integer.parseInt(hexCode.toString(), 16);
     }
 
-    private boolean isRoyalFlush(Hand hand) {
-        return isFlush(hand) && hand.getHighestCard().getRank().equals("A");
+    private int encodeFullHouse(Hand hand) {
+        int threeOfAKindValue = findThreeOfAKindValue(hand);
+        int pairValue = findPairValueForFullHouse(hand, threeOfAKindValue);
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(threeOfAKindValue));
+        hexCode.append(Integer.toHexString(pairValue));
+        return Integer.parseInt(hexCode.toString(), 16);
+    }
+
+    private int encodeStraight(Hand hand) {
+        return encodeFlashOrHighCard(hand);
+    }
+
+    private int encodeThreeOfAKind(Hand hand) {
+        int threeOfAKindValue = findThreeOfAKindValue(hand);
+        int[] parts = new int[2];
+        for (int i = 0, j = 0; i < 5; i++) {
+            int currentCardRankValue = hand.getCardByIndex(i).getRank();
+            if (currentCardRankValue != threeOfAKindValue) {
+                parts[j++] = currentCardRankValue;
+            }
+        }
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(threeOfAKindValue));
+        hexCode.append(Integer.toHexString(parts[0]));
+        hexCode.append(Integer.toHexString(parts[1]));
+        return Integer.parseInt(hexCode.toString(), 16);
+    }
+
+    private int encodeTwoPair(Hand hand) {
+        List<Integer> pairHexStringValues = findTwoPairValues(hand);
+        for (int i = 0; i < 5; i++) {
+            int currentCardRankValue = hand.getCardByIndex(i).getRank();
+            if (!pairHexStringValues.contains(currentCardRankValue)) {
+                StringBuffer hexCode = new StringBuffer();
+                hexCode.append(Integer.toHexString(pairHexStringValues.get(0)));
+                hexCode.append(Integer.toHexString(pairHexStringValues.get(1)));
+                hexCode.append(Integer.toHexString(currentCardRankValue));
+                return Integer.parseInt(hexCode.toString(), 16);
+            }
+        }
+        return 0x0;
+    }
+
+    private int encodePair(Hand hand) {
+        String pairHexValue = Integer.toHexString(findPairValue(hand));
+        String[] parts = new String[3];
+        for (int i = 0, j = 0; i < 5; i++) {
+            int currentCardRankValue = hand.getCardByIndex(i).getRank();
+            int pairValue = findPairValue(hand);
+            if (currentCardRankValue != pairValue) {
+                parts[j] = Integer.toHexString(currentCardRankValue);
+                j++;
+            }
+        }
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(pairHexValue);
+        hexCode.append(parts[0]);
+        hexCode.append(parts[1]);
+        hexCode.append(parts[2]);
+        return Integer.parseInt(hexCode.toString(), 16);
+    }
+
+    private int encodeFlashOrHighCard(Hand hand) {
+        StringBuffer hexCode = new StringBuffer();
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(0).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(1).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(2).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(3).getRank()));
+        hexCode.append(Integer.toHexString(hand.getCardByIndex(4).getRank()));
+        return Integer.parseInt(hexCode.toString(), 16);
+    }
+
+    private boolean isRoyalFlush(Hand hand) {;
+        return isFlush(hand) && hand.getHighestCard().getRank() == 0xE;
     }
 
     private boolean isStraightFlush(Hand hand) {
@@ -65,19 +148,19 @@ public class HandEvaluator {
     }
 
     private boolean isFourOfAKind(Hand hand) {
-        return hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(3).getRank()) ||
-                hand.getCardByIndex(1).getRank().equals(hand.getCardByIndex(4).getRank()) ;
+        return hand.getCardByIndex(0).getRank() == hand.getCardByIndex(3).getRank() ||
+                hand.getCardByIndex(1).getRank() == hand.getCardByIndex(4).getRank() ;
     }
 
     private boolean isFullHouse(Hand hand) {
-        return  (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) && hand.getCardByIndex(2).getRank().equals(hand.getCardByIndex(4).getRank())) ||
-                (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(2).getRank()) && hand.getCardByIndex(3).getRank().equals(hand.getCardByIndex(4).getRank()));
+        return  (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() && hand.getCardByIndex(2).getRank() == hand.getCardByIndex(4).getRank()) ||
+                (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(2).getRank() && hand.getCardByIndex(3).getRank() == hand.getCardByIndex(4).getRank());
     }
 
     private boolean isFlush(Hand hand) {
-        String suit = hand.getCardByIndex(0).getSuit();
+        int suit = hand.getCardByIndex(0).getSuit();
         for (Card card : hand.getCards()) {
-            if (!card.getSuit().equals(suit)) {
+            if (card.getSuit() != suit) {
                 return false;
             }
         }
@@ -86,7 +169,7 @@ public class HandEvaluator {
 
     private boolean isStraight(Hand hand) {
         for (int i = 0; i < 4; i++) {
-            if (Card.getCardRankValue(hand.getCardByIndex(i)) - Card.getCardRankValue(hand.getCardByIndex(i + 1)) != 1) {
+            if (hand.getCardByIndex(i).getRank() - hand.getCardByIndex(i + 1).getRank() != 1) {
                 return false;
             }
         }
@@ -94,183 +177,68 @@ public class HandEvaluator {
     }
 
     private boolean isThreeOfAKind(Hand hand) {
-        return  hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(2).getRank()) ||
-                hand.getCardByIndex(1).getRank().equals(hand.getCardByIndex(3).getRank()) ||
-                hand.getCardByIndex(2).getRank().equals(hand.getCardByIndex(4).getRank());
+        return  hand.getCardByIndex(0).getRank() == hand.getCardByIndex(2).getRank() ||
+                hand.getCardByIndex(1).getRank() == hand.getCardByIndex(3).getRank() ||
+                hand.getCardByIndex(2).getRank() == hand.getCardByIndex(4).getRank();
     }
 
     private boolean isTwoPair(Hand hand) {
-        return  (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) && hand.getCardByIndex(2).getRank().equals(hand.getCardByIndex(3).getRank())) ||
-                (hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) && hand.getCardByIndex(3).getRank().equals(hand.getCardByIndex(4).getRank())) ||
-                (hand.getCardByIndex(1).getRank().equals(hand.getCardByIndex(2).getRank()) && hand.getCardByIndex(3).getRank().equals(hand.getCardByIndex(4).getRank()));
+        return  (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() && hand.getCardByIndex(2).getRank() == hand.getCardByIndex(3).getRank()) ||
+                (hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() && hand.getCardByIndex(3).getRank() == hand.getCardByIndex(4).getRank()) ||
+                (hand.getCardByIndex(1).getRank() == hand.getCardByIndex(2).getRank() && hand.getCardByIndex(3).getRank() == hand.getCardByIndex(4).getRank());
     }
 
-    private boolean isOnePair(Hand hand) {
+    private boolean isPair(Hand hand) {
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank())) {
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank()) {
                 return true;
             }
         }
         return false;
     }
 
-    private int comparePair(Hand hand1, Hand hand2) {
-        int pairValue1 = findPairValue(hand1);
-        int pairValue2 = findPairValue(hand2);
-
-        if (pairValue1 != pairValue2) {
-            return Integer.compare(pairValue1, pairValue2);
-        }
-
-        return compareKickers(hand1, hand2, pairValue1);
-    }
-
-    private int compareTwoPair(Hand hand1, Hand hand2) {
-        List<Integer> pairsInHand1 = findFwoPairValues(hand1);
-        List<Integer> pairsInHand2 = findFwoPairValues(hand2);
-
-        for (int i = 0; i < 2; i++) {
-            if (!pairsInHand1.get(i).equals(pairsInHand2.get(i))) {
-                return Integer.compare(pairsInHand1.get(i), pairsInHand2.get(i));
-            }
-        }
-
-        List<Integer> kickersInHand1 = getKickers(hand1, pairsInHand1);
-        List<Integer> kickersInHand2 = getKickers(hand2, pairsInHand2);
-
-        for (int i = 0; i < kickersInHand1.size(); i++) {
-            if (!kickersInHand1.get(i).equals(kickersInHand2.get(i))) {
-                return Integer.compare(kickersInHand1.get(i), kickersInHand2.get(i));
-            }
-        }
-        return 0;
-    }
-
-    private int compareThreeOfAKind(Hand hand1, Hand hand2) {
-        int threeOfAKindValue1 = findThreeOfAKindValue(hand1);
-        int threeOfAKindValue2 = findThreeOfAKindValue(hand2);
-
-        if (threeOfAKindValue1 != threeOfAKindValue2) {
-            return Integer.compare(threeOfAKindValue1, threeOfAKindValue2);
-        }
-
-        return compareKickers(hand1, hand2, threeOfAKindValue1);
-    }
-
-    private int compareFullHouse(Hand hand1, Hand hand2) {
-        int threeOfAKindValueHand1 = findThreeOfAKindValue(hand1);
-        int threeOfAKindValueHand2 = findThreeOfAKindValue(hand2);
-
-        if (threeOfAKindValueHand1 != threeOfAKindValueHand2) {
-            return Integer.compare(threeOfAKindValueHand1, threeOfAKindValueHand2);
-        }
-
-        int pairValueHand1 = findPairValueForFullHouse(hand1, threeOfAKindValueHand1);
-        int pairValueHand2 = findPairValueForFullHouse(hand2, threeOfAKindValueHand2);
-
-        return Integer.compare(pairValueHand1, pairValueHand2);
-    }
-
-    private int compareFourOfAKind(Hand hand1, Hand hand2) {
-        int fourOfAKindValueHand1 = findFourOfAKindValue(hand1);
-        int fourOfAKindValueHand2 = findFourOfAKindValue(hand2);
-
-        if (fourOfAKindValueHand1 != fourOfAKindValueHand2) {
-            return Integer.compare(fourOfAKindValueHand1, fourOfAKindValueHand2);
-        }
-        return compareHighCards(hand1, hand2);
-    }
-
     private int findFourOfAKindValue(Hand hand) {
-        return hand.getCardByIndex(0).getRank().equals(hand.getCardByIndex(1).getRank()) ?
-                Card.getCardRankValue(hand.getCardByIndex(0)) :
-                Card.getCardRankValue(hand.getCardByIndex(2));
-    }
-
-    private int compareHighCards(Hand hand1, Hand hand2) {
-        for (int i = 0; i < 5; i++) {
-            if (!hand1.getCardByIndex(i).getRank().equals(hand2.getCardByIndex(i).getRank())) {
-                return Integer.compare(
-                        Card.getCardRankValue(hand1.getCardByIndex(i)),
-                        Card.getCardRankValue(hand2.getCardByIndex(i))
-                );
-            }
-        }
-        return 0;
+        return hand.getCardByIndex(0).getRank() == hand.getCardByIndex(1).getRank() ?
+                hand.getCardByIndex(0).getRank() :
+                hand.getCardByIndex(2).getRank();
     }
 
     public int findThreeOfAKindValue(Hand hand) {
         for (int i = 0; i < 3; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 2).getRank())) {
-                return Card.getCardRankValue(hand.getCardByIndex(i));
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 2).getRank()) {
+                return hand.getCardByIndex(i).getRank();
             }
         }
-        return -1;
+        return 0x0;
     }
 
     private int findPairValue(Hand hand) {
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank())) {
-                return Card.getCardRankValue(hand.getCardByIndex(i));
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank()) {
+                return hand.getCardByIndex(i).getRank();
             }
         }
-        return -1;
+        return 0x0;
     }
 
     private int findPairValueForFullHouse(Hand hand, int threeOfAKindValue) {
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank())) {
-                int cardRankValue = Card.getCardRankValue(hand.getCardByIndex(i));
-                if (cardRankValue != threeOfAKindValue) {
-                    return Card.getCardRankValue(hand.getCardByIndex(i));
-                }
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank() &&
+                    hand.getCardByIndex(i).getRank() != threeOfAKindValue) {
+                return hand.getCardByIndex(i).getRank();
             }
         }
-        return -1;
+        return 0x0;
     }
 
-    private List<Integer> findFwoPairValues(Hand hand) {
+    private List<Integer> findTwoPairValues(Hand hand) {
         List<Integer> twoPairValues = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            if (hand.getCardByIndex(i).getRank().equals(hand.getCardByIndex(i + 1).getRank())) {
-                twoPairValues.add(Card.getCardRankValue(hand.getCardByIndex(i)));
+            if (hand.getCardByIndex(i).getRank() == hand.getCardByIndex(i + 1).getRank()) {
+                twoPairValues.add(hand.getCardByIndex(i).getRank());
                 i++;
             }
         }
-        twoPairValues.sort(Collections.reverseOrder());
         return twoPairValues;
-    }
-
-    private List<Integer> getKickers(Hand hand, int combinationValue) {
-        List<Integer> kickers = new ArrayList<>();
-        for (Card card : hand.getCards()) {
-            if (Card.getCardRankValue(card) != combinationValue) {
-                kickers.add(Card.getCardRankValue(card));
-            }
-        }
-        kickers.sort(Collections.reverseOrder());
-        return kickers;
-    }
-
-    private List<Integer> getKickers(Hand hand, List<Integer> combinationValues) {
-        List<Integer> kickers = new ArrayList<>();
-        for (Card card : hand.getCards()) {
-            if (!combinationValues.contains(Card.getCardRankValue(card))) {
-                kickers.add(Card.getCardRankValue(card));
-            }
-        }
-        kickers.sort(Collections.reverseOrder());
-        return kickers;
-    }
-
-    private int compareKickers(Hand hand1, Hand hand2, int combinationValue) {
-        List<Integer> kickers1 = getKickers(hand1, combinationValue);
-        List<Integer> kickers2 = getKickers(hand2, combinationValue);
-        for (int i = 0; i < kickers1.size(); i++) {
-            if (!kickers1.get(i).equals(kickers2.get(i))) {
-                return Integer.compare(kickers1.get(i), kickers2.get(i));
-            }
-        }
-        return 0;
     }
 }

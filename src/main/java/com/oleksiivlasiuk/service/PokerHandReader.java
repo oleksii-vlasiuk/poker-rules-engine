@@ -25,17 +25,19 @@ public class PokerHandReader {
         return hands;
     }
 
-    public Card parseCardFromString(String card) {
-        String rank = card.substring(0, card.length() - 1);
-        String suit = card.substring(card.length() - 1);
-        return new Card(rank, suit);
+    public Card parseCardFromString(String cardString) {
+        String rank = cardString.substring(0, cardString.length() - 1);
+        String suit = cardString.substring(cardString.length() - 1);
+        int rankValue = Card.getRankHexValue(rank);
+        int suitValue = Card.getSuitHexValue(suit);
+        return new Card(rankValue, suitValue);
     }
 
-    public Hand parseHandFromString(String hand) {
-        List<String> cardsNames = List.of(hand.split(" "));
+    public Hand parseHandFromString(String handString) {
+        List<String> cardStrings = List.of(handString.split(" "));
         List<Card> cards = new ArrayList<>();
-        for (String cardName : cardsNames) {
-            cards.add(parseCardFromString(cardName));
+        for (String cardString : cardStrings) {
+            cards.add(parseCardFromString(cardString));
         }
         return new Hand(cards);
     }
